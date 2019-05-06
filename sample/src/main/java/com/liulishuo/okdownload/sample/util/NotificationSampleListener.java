@@ -148,8 +148,8 @@ public class NotificationSampleListener extends DownloadListener4WithSpeed {
                               @NonNull SpeedCalculator blockSpeed) {
     }
 
-    @Override public void progress(@NonNull DownloadTask task, long currentOffset,
-                                   @NonNull SpeedCalculator taskSpeed) {
+    @Override
+    public void progress(@NonNull DownloadTask task, long currentOffset, long total, @NonNull SpeedCalculator taskSpeed) {
         Log.d("NotificationActivity", "progress " + currentOffset);
 
         builder.setContentText("downloading with speed: " + taskSpeed.speed());

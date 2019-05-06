@@ -276,9 +276,9 @@ public class ListenerSample {
                 log("progressBlock");
             }
 
-            @Override public void progress(@NonNull DownloadTask task, long currentOffset,
-                                           @NonNull SpeedCalculator taskSpeed) {
-                log("progress");
+            @Override
+            public void progress(@NonNull DownloadTask task, long currentOffset, long total, @NonNull SpeedCalculator taskSpeed) {
+
             }
 
             @Override

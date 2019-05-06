@@ -18,6 +18,7 @@ package com.liulishuo.okdownload.core.listener.assist;
 
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.util.Log;
 import android.util.SparseArray;
 
 import com.liulishuo.okdownload.DownloadTask;
@@ -58,7 +59,8 @@ public class Listener4SpeedAssistExtend implements Listener4Assist.AssistExtend,
         if (callback != null) {
             callback.progressBlock(task, blockIndex, model.blockCurrentOffsetMap.get(blockIndex),
                     speedModel.getBlockSpeed(blockIndex));
-            callback.progress(task, model.currentOffset, speedModel.taskSpeed);
+            callback.progress(task, model.currentOffset, model.info.getTotalLength(),speedModel.taskSpeed);
+            Log.d("qqqqqqqq", "dispatchFetchProgress");
         }
 
         return true;
@@ -137,7 +139,7 @@ public class Listener4SpeedAssistExtend implements Listener4Assist.AssistExtend,
         void progressBlock(@NonNull DownloadTask task, int blockIndex, long currentBlockOffset,
                            @NonNull SpeedCalculator blockSpeed);
 
-        void progress(@NonNull DownloadTask task, long currentOffset,
+        void progress(@NonNull DownloadTask task, long currentOffset, long total,
                       @NonNull SpeedCalculator taskSpeed);
 
         void blockEnd(@NonNull DownloadTask task, int blockIndex, BlockInfo info,

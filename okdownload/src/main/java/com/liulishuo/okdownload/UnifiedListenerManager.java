@@ -38,8 +38,8 @@ public class UnifiedListenerManager {
         realListenerMap = new SparseArray<>();
     }
 
-    public synchronized void detachListener(int id) {
-        realListenerMap.remove(id);
+    public synchronized void detachListener(int taskId) {
+        realListenerMap.remove(taskId);
     }
 
     public synchronized void addAutoRemoveListenersWhenTaskEnd(int id) {
@@ -118,6 +118,10 @@ public class UnifiedListenerManager {
                                                             @NonNull DownloadListener listener) {
         attachListener(task, listener);
 
+        task.enqueue(hostListener);
+    }
+
+    public synchronized void enqueueTaskWithUnifiedListener(@NonNull DownloadTask task) {
         task.enqueue(hostListener);
     }
 

@@ -18,6 +18,7 @@ package com.liulishuo.okdownload.sample;
 
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.v7.widget.CardView;
 import android.util.Log;
 import android.view.View;
 import android.widget.ProgressBar;
@@ -34,6 +35,7 @@ import com.liulishuo.okdownload.core.listener.DownloadListener4WithSpeed;
 import com.liulishuo.okdownload.core.listener.assist.Listener4SpeedAssistExtend;
 import com.liulishuo.okdownload.sample.base.BaseSampleActivity;
 import com.liulishuo.okdownload.sample.util.DemoUtil;
+import com.liulishuo.okdownload.sample.util.GlobalListenerManager;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -54,14 +56,32 @@ public class SingleActivity extends BaseSampleActivity {
     private static final String TAG = "SingleActivity";
     private DownloadTask task;
 
+    private DownloadListener4WithSpeed listener;
+
+    private TextView statusTv;
+    private ProgressBar progressBar;
+    private CardView actionView;
+    private TextView actionTv;
+
     @Override protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_single);
-        initSingleDownload(
-                (TextView) findViewById(R.id.statusTv),
-                (ProgressBar) findViewById(R.id.progressBar),
-                findViewById(R.id.actionView),
-                (TextView) findViewById(R.id.actionTv));
+        statusTv = findViewById(R.id.statusTv);
+        progressBar = findViewById(R.id.progressBar);
+        actionView = findViewById(R.id.actionView);
+        actionTv = findViewById(R.id.actionTv);
+        initSingleDownload(statusTv,progressBar,actionView,actionTv);
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        initAction(actionView, actionTv, statusTv, progressBar);
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
     }
 
     @Override public int titleRes() {
@@ -70,14 +90,15 @@ public class SingleActivity extends BaseSampleActivity {
 
     @Override protected void onDestroy() {
         super.onDestroy();
-        if (task != null) task.cancel();
+//        if (task != null) task.cancel();
+        Log.d("qqqqqqqq", "onDestroy");
+        GlobalListenerManager.getInstance().getManager().detachListener(task.getId());
     }
 
     private void initSingleDownload(TextView statusTv, ProgressBar progressBar, View actionView,
                                     TextView actionTv) {
         initTask();
         initStatus(statusTv, progressBar);
-        initAction(actionView, actionTv, statusTv, progressBar);
     }
 
     private void initTask() {
@@ -88,7 +109,7 @@ public class SingleActivity extends BaseSampleActivity {
         task = new DownloadTask.Builder(url, parentFile)
                 .setFilename(filename)
                 // the minimal interval millisecond for callback progress
-                .setMinIntervalMillisCallbackProcess(16)
+                .setMinIntervalMillisCallbackProcess(1000)
                 // ignore the same task has already completed in the past.
                 .setPassIfAlreadyCompleted(false)
                 .build();
@@ -109,32 +130,10 @@ public class SingleActivity extends BaseSampleActivity {
         }
     }
 
-    private void initAction(final View actionView, final TextView actionTv, final TextView statusTv,
-                            final ProgressBar progressBar) {
-        actionTv.setText(R.string.start);
-        actionView.setOnClickListener(new View.OnClickListener() {
-            @Override public void onClick(View v) {
-                final boolean started = task.getTag() != null;
 
-                if (started) {
-                    // to cancel
-                    task.cancel();
-                } else {
-                    actionTv.setText(R.string.cancel);
-
-                    // to start
-                    startTask(statusTv, progressBar, actionTv);
-                    // mark
-                    task.setTag("mark-task-started");
-                }
-            }
-        });
-    }
-
-    private void startTask(final TextView statusTv, final ProgressBar progressBar,
-                           final TextView actionTv) {
-
-        task.enqueue(new DownloadListener4WithSpeed() {
+    private void initListener(final TextView statusTv, final ProgressBar progressBar,
+                              final TextView actionTv) {
+        listener = new DownloadListener4WithSpeed() {
             private long totalLength;
             private String readableTotalLength;
 
@@ -172,15 +171,19 @@ public class SingleActivity extends BaseSampleActivity {
                                       @NonNull SpeedCalculator blockSpeed) {
             }
 
-            @Override public void progress(@NonNull DownloadTask task, long currentOffset,
-                                           @NonNull SpeedCalculator taskSpeed) {
+            @Override
+            public void progress(@NonNull DownloadTask task, long currentOffset, long total, @NonNull SpeedCalculator taskSpeed) {
+                Log.d("qqqqqqqq", this.toString() + "progress");
                 final String readableOffset = Util.humanReadableBytes(currentOffset, true);
-                final String progressStatus = readableOffset + "/" + readableTotalLength;
+                final String readableTotal = Util.humanReadableBytes(total, true);
+                final String progressStatus = readableOffset + "/" + readableTotal;
                 final String speed = taskSpeed.speed();
                 final String progressStatusWithSpeed = progressStatus + "(" + speed + ")";
 
                 statusTv.setText(progressStatusWithSpeed);
-                DemoUtil.calcProgressToView(progressBar, currentOffset, totalLength);
+                totalLength = total;
+                Log.d("qqqqqqqq", "progress currentOffset=" + currentOffset);
+                DemoUtil.calcProgressToView(progressBar, currentOffset, total);
             }
 
             @Override
@@ -204,7 +207,41 @@ public class SingleActivity extends BaseSampleActivity {
                     }
                 }
             }
+        };
+        GlobalListenerManager.getInstance().attachListener(task, listener);
+        GlobalListenerManager.getInstance().addAutoRemoveListenersWhenTaskEnd(task.getId());
+    }
+
+    private void initAction(final View actionView, final TextView actionTv, final TextView statusTv,
+                            final ProgressBar progressBar) {
+        actionTv.setText(R.string.start);
+        initListener(statusTv, progressBar, actionTv);
+        if (task.getListener() != null) {
+            Log.d("SingleActivity", "listener不为null");
+        }
+//        task.replaceListener(listener);
+        actionView.setOnClickListener(new View.OnClickListener() {
+            @Override public void onClick(View v) {
+                final boolean started = task.getTag() != null;
+
+                if (started) {
+                    // to cancel
+                    task.cancel();
+//                    task.replaceListener(listener);
+                } else {
+                    actionTv.setText(R.string.cancel);
+                    GlobalListenerManager.getInstance().enqueueTask(task,listener);
+                    // to start
+//                    startTask();
+                    // mark
+                    task.setTag("mark-task-started");
+                }
+            }
         });
+    }
+
+    private void startTask() {
+        task.enqueue(listener);
     }
 
     @SuppressFBWarnings(value = "REC")

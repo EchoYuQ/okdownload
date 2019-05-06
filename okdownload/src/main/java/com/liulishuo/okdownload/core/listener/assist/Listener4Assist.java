@@ -18,6 +18,7 @@ package com.liulishuo.okdownload.core.listener.assist;
 
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.util.Log;
 import android.util.SparseArray;
 
 import com.liulishuo.okdownload.DownloadTask;
@@ -80,6 +81,7 @@ public class Listener4Assist<T extends Listener4Assist.Listener4Model> implement
         if (callback != null) {
             callback.progressBlock(task, blockIndex, blockCurrentOffset);
             callback.progress(task, model.currentOffset);
+            Log.d("qqqqqqqq", "callback progress");
         }
     }
 

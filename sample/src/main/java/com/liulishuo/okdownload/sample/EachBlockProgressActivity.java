@@ -284,8 +284,8 @@ public class EachBlockProgressActivity extends BaseSampleActivity {
 
             }
 
-            @Override public void progress(@NonNull DownloadTask task, long currentOffset,
-                                           @NonNull SpeedCalculator taskSpeed) {
+            @Override
+            public void progress(@NonNull DownloadTask task, long currentOffset, long total, @NonNull SpeedCalculator taskSpeed) {
                 statusTv.setText(R.string.fetch_progress);
 
                 EachBlockProgressUtil.updateProgress(taskPb, currentOffset);

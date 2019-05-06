@@ -18,6 +18,7 @@ package com.liulishuo.okdownload.core.listener;
 
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.util.Log;
 
 import com.liulishuo.okdownload.DownloadListener;
 import com.liulishuo.okdownload.DownloadTask;
@@ -104,6 +105,7 @@ public abstract class DownloadListener4 implements DownloadListener,
     public final void fetchProgress(@NonNull DownloadTask task, int blockIndex,
                                     long increaseBytes) {
         assist.fetchProgress(task, blockIndex, increaseBytes);
+        Log.d("qqqqqqqq", "fetchProgress");
     }
 
     @Override public void fetchEnd(@NonNull DownloadTask task, int blockIndex, long contentLength) {
